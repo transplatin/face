@@ -1,6 +1,6 @@
 {
   "name": "@transplatin/face",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Face recognition for Node JS.",
   "main": "index.mjs",
   "author": "Vipin Kumar",
