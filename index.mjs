@@ -1,11 +1,15 @@
 import "@tensorflow/tfjs-core";
 import canvas, { Canvas, Image, ImageData } from "canvas";
 import faceapi from "face-api.js";
+import path from 'path'
+import { fileURLToPath } from 'url';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const minConfidence = 0.5;
 const inputSize = 416;
 const scoreThreshold = 0.5;
-const MODEL_URL = "./weights";
+const MODEL_URL = path.join(__dirname,"./weights");
 
 /*
  Simulate canvas in nodejs as browser is not available
