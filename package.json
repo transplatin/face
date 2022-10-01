@@ -1,0 +1,14 @@
+{
+  "name": "@transplatin/face",
+  "version": "1.0.0",
+  "description": "Face recognition for Node JS.",
+  "main": "index.mjs",
+  "author": "Vipin Kumar",
+  "license": "MIT",
+  "dependencies": {
+    "@tensorflow/tfjs-core": "1.7.0",
+    "canvas": "^2.9.3",
+    "face-api.js": "^0.22.2"
+  },
+  "devDependencies": {}
+}
