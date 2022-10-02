@@ -1,15 +1,18 @@
 import "@tensorflow/tfjs-core";
 import canvas, { Canvas, Image, ImageData } from "canvas";
 import faceapi from "face-api.js";
-import path from 'path'
-import { fileURLToPath } from 'url';
+import path from "path";
+import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const minConfidence = 0.5;
+const maxResults=100;
 const inputSize = 416;
 const scoreThreshold = 0.5;
-const MODEL_URL = path.join(__dirname,"./weights");
+const minFaceSize = 100;
+const scaleFactor = 0.8;
+const MODEL_URL = path.join(__dirname, "./weights");
 
 /*
  Simulate canvas in nodejs as browser is not available
@@ -18,16 +21,38 @@ const MODEL_URL = path.join(__dirname,"./weights");
 faceapi.env.monkeyPatch({ Canvas, Image, ImageData });
 await faceapi.nets.ssdMobilenetv1.loadFromDisk(MODEL_URL);
 await faceapi.nets.tinyFaceDetector.loadFromDisk(MODEL_URL);
+await faceapi.nets.mtcnn.loadFromDisk(MODEL_URL);
 await faceapi.nets.faceRecognitionNet.loadFromDisk(MODEL_URL);
 await faceapi.nets.ageGenderNet.loadFromDisk(MODEL_URL);
 await faceapi.nets.faceExpressionNet.loadFromDisk(MODEL_URL);
 await faceapi.nets.faceLandmark68TinyNet.loadFromDisk(MODEL_URL);
 await faceapi.nets.faceLandmark68Net.loadFromDisk(MODEL_URL);
 
-const getFaceDetectorOptions = (net) => {
-  return net === faceapi.nets.ssdMobilenetv1
-    ? new faceapi.SsdMobilenetv1Options({ minConfidence })
-    : new faceapi.TinyFaceDetectorOptions({ inputSize, scoreThreshold });
+const getFaceDetectorOptions = (model = "ssd", modelOptions = false) => {
+  const options = {
+    ssd: {
+      minConfidence,
+      maxResults
+    },
+    tiny: {
+      inputSize,
+      scoreThreshold,
+    },
+    mtcnn: {
+      minFaceSize,
+      scaleFactor,
+    },
+  };
+  switch (model) {
+    case "tiny":
+      return new faceapi.TinyFaceDetectorOptions(
+        options[modelOptions || model]
+      );
+    case "mtcnn":
+      return new faceapi.MtcnnOptions(options[modelOptions || model]);
+    default:
+      return new faceapi.SsdMobilenetv1Options(options[modelOptions || model]);
+  }
 };
 
 const face = () => {
@@ -39,14 +64,16 @@ const face = () => {
       source: null,
       single: false,
       tinyLandmarks: false,
-      tinyNet: false,
+      model: "ssd",
+      modelOptions: false,
     }
   ) =>
     new Promise(async (res, rej) => {
       try {
-        const faceDetectionNet =
-          faceapi.nets[options.tinyNet ? "tinyFaceDetector" : "ssdMobilenetv1"];
-        const faceDetectionOptions = getFaceDetectorOptions(faceDetectionNet);
+        const faceDetectionOptions = getFaceDetectorOptions(
+          options.model,
+          options.modelOptions
+        );
         const referenceImage = await canvas.loadImage(options.source);
 
         const results = options.single
@@ -62,9 +89,12 @@ const face = () => {
               .withAgeAndGender()
               .withFaceExpressions()
               .withFaceDescriptors();
-        if (results == undefined) {
+        if (results === undefined || results.length == 0) {
+          let models = ["tiny", "ssd", "mtcnn"];
           rej(
-            `Unable to find any face in the picture. Try changing tinyNet value to "${!options.tinyNet}" or use a different image.`
+            `Unable to find any face in the picture. Try changing 'model' to either "${models
+              .filter((e) => e != options.model)
+              .join('" or "')}" or use a different image.`
           );
         }
         res(results);
