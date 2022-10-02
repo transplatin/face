@@ -7,7 +7,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const minConfidence = 0.5;
-const maxResults=100;
+const maxResults = 100;
 const inputSize = 416;
 const scoreThreshold = 0.5;
 const minFaceSize = 100;
@@ -32,7 +32,7 @@ const getFaceDetectorOptions = (model = "ssd", modelOptions = false) => {
   const options = {
     ssd: {
       minConfidence,
-      maxResults
+      maxResults,
     },
     tiny: {
       inputSize,
@@ -46,12 +46,12 @@ const getFaceDetectorOptions = (model = "ssd", modelOptions = false) => {
   switch (model) {
     case "tiny":
       return new faceapi.TinyFaceDetectorOptions(
-        options[modelOptions || model]
+        modelOptions || options[model]
       );
     case "mtcnn":
-      return new faceapi.MtcnnOptions(options[modelOptions || model]);
+      return new faceapi.MtcnnOptions(modelOptions || options[model]);
     default:
-      return new faceapi.SsdMobilenetv1Options(options[modelOptions || model]);
+      return new faceapi.SsdMobilenetv1Options(modelOptions || options[model]);
   }
 };
 
